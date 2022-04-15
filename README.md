@@ -278,3 +278,21 @@ The solution for this case is to use the `socket::clone()` method to make a copy
 The `socket::shutdown()` method can be used to communicate the intent to close the socket from one of these objects to the other without needing another thread signaling mechanism. 
 
 See the [tcpechomt.cpp](https://github.com/fpagliughi/sockpp/blob/master/examples/tcp/tcpechomt.cpp) example.
+
+## Using sockpp with tipi.build
+
+`sockpp` can be easily used in [tipi.build](https://tipi.build) projects simply by adding the following entry to your `.tipi/deps`:
+
+```json
+{
+    "requires": {
+        " fpagliughi/sockpp": {}
+    }
+}
+```
+
+To try this you can run the following command in `/examples/with-tipi`:
+
+```bash
+tipi . -t linux # or -t macos / -t windows / -t vs-16-2019-win64-cxx17
+```
