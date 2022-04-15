@@ -1,9 +1,11 @@
-// can_socket.cpp
+// tcpecho.cpp
+//
+// Simple TCP echo client
 //
 // --------------------------------------------------------------------------
 // This file is part of the "sockpp" C++ socket library.
 //
-// Copyright (c) 2021 Frank Pagliughi
+// Copyright (c) 2014-2017 Frank Pagliughi
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,65 +36,64 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // --------------------------------------------------------------------------
 
-#include "sockpp/can_socket.h"
-#include "sockpp/socket.h"
-#include <sys/ioctl.h>
-
-// SIOCGSTAMP was moved in recent kernels
-// ref: https://patchwork.kernel.org/project/qemu-devel/patch/20190617114005.24603-1-berrange@redhat.com/#22706197
-#ifndef SIOCGSTAMP
-#include <linux/sockios.h>
-#endif
+#include <iostream>
+#include <string>
+#include "sockpp/tcp6_connector.h"
+#include "sockpp/version.h"
 
 using namespace std;
 using namespace std::chrono;
 
-namespace sockpp {
-
-/////////////////////////////////////////////////////////////////////////////
-
-can_socket::can_socket(const can_address& addr)
-{
-	socket_t h = create_handle(SOCK_RAW, CAN_RAW);
-
-	if (check_socket_bool(h)) {
-		reset(h);
-		bind(addr);
-	}
-}
-
-system_clock::time_point can_socket::last_frame_time()
-{
-	timeval tv {};
-
-	// TODO: Handle error
-	::ioctl(handle(), SIOCGSTAMP, &tv);
-	return to_timepoint(tv);
-}
-
-double can_socket::last_frame_timestamp()
-{
-	timeval tv {};
-
-	// TODO: Handle error
-	::ioctl(handle(), SIOCGSTAMP, &tv);
-	return double(tv.tv_sec) + 1.0e-6 * tv.tv_usec;
-}
-
-
 // --------------------------------------------------------------------------
 
-ssize_t can_socket::recv_from(can_frame *frame, int flags,
-							  can_address* srcAddr /*=nullptr*/)
+int main(int argc, char* argv[])
 {
-	sockaddr* p = srcAddr ? srcAddr->sockaddr_ptr() : nullptr;
-    socklen_t len = srcAddr ? srcAddr->size() : 0;
+	cout << "Sample IPv6 TCP echo client for 'sockpp' "
+		<< sockpp::SOCKPP_VERSION << '\n' << endl;
 
-	// TODO: Check returned length
-	return check_ret(::recvfrom(handle(), frame, sizeof(can_frame),
-								flags, p, &len));
-}
+	std::string host = (argc > 1) ? argv[1] : "::1";
+	in_port_t port = (argc > 2) ? atoi(argv[2]) : 12345;
 
-/////////////////////////////////////////////////////////////////////////////
-// End namespace sockpp
+	sockpp::socket_initializer sockInit;
+
+	// Implicitly creates an inet6_address from {host,port}
+	// and then tries the connection.
+
+	sockpp::tcp6_connector conn({host, port});
+	if (!conn) {
+		cerr << "Error connecting to server at "
+			<< sockpp::inet6_address(host, port)
+			<< "\n\t" << conn.last_error_str() << endl;
+		return 1;
+	}
+
+	cout << "Created a connection from " << conn.address() << endl;
+
+    // Set a timeout for the responses
+    if (!conn.read_timeout(seconds(5))) {
+        cerr << "Error setting timeout on TCP stream: "
+                << conn.last_error_str() << endl;
+    }
+
+	string s, sret;
+	while (getline(cin, s) && !s.empty()) {
+		if (conn.write(s) != ssize_t(s.length())) {
+			cerr << "Error writing to the TCP stream: "
+				<< conn.last_error_str() << endl;
+			break;
+		}
+
+		sret.resize(s.length());
+		ssize_t n = conn.read_n(&sret[0], s.length());
+
+		if (n != ssize_t(s.length())) {
+			cerr << "Error reading from TCP stream: "
+				<< conn.last_error_str() << endl;
+			break;
+		}
+
+		cout << sret << endl;
+	}
+
+	return (!conn) ? 1 : 0;
 }

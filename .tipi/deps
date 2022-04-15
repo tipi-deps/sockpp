@@ -1,0 +1,36 @@
+{
+	"x:windows": [ 
+		"/examples/linux", 
+		"/examples/unix", 
+		"/include/sockpp/unix*",
+		"/include/sockpp/can*",
+		"/src/unix", 
+		"/src/linux", 
+		"/tests/unit/test_unix*"		
+	],
+	"x:windows-cxx17": [ 
+		"/examples/linux", 
+		"/examples/unix", 
+		"/include/sockpp/unix*",
+		"/include/sockpp/can*",
+		"/src/unix", 
+		"/src/linux", 
+		"/tests/unit/test_unix*"		
+	],
+	"x:vs-16-2019-win64-cxx17": [ 
+		"/examples/linux", 
+		"/examples/unix", 
+		"/include/sockpp/unix*",
+		"/include/sockpp/can*",
+		"/src/unix", 
+		"/src/linux", 
+		"/tests/unit/test_unix*"		
+	],
+
+	"catchorg/Catch2@file://single_include": { "@": "v2.13.9" },
+	"platform:linux": [],
+	"platform:linux-cxx17": [],
+	"platform:windows" : ["target::ws2_32"],
+	"platform:windows-cxx17" : ["target::ws2_32"],
+	"platform:vs-16-2019-win64-cxx17": ["target::ws2_32"]
+}

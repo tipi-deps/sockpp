@@ -43,3 +43,6 @@ lib/
 # SlickEdit files
 *.vpj
 
+# tipi build folder
+build/
+.vscode
