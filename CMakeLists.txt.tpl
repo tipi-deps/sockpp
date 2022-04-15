@@ -35,7 +35,7 @@ HunterGate(
 project({{org}}_{{project}} VERSION "0.0.1")
 enable_testing()
 
-set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(generated_dir "${CMAKE_HOME_DIRECTORY}/generated")
 set(version_info_file_generated_path "${generated_dir}/include/sockpp/version.h")
 
 ###
@@ -43,15 +43,15 @@ set(version_info_file_generated_path "${generated_dir}/include/sockpp/version.h"
 
 # first figure out if this is a local build or a remote one...
 # start at the local build nesting... that's one level shallower than the remote build
-SET(version_info_in_file "${CMAKE_CURRENT_BINARY_DIR}/../../../version.h.in") 
+SET(version_info_in_file "${CMAKE_HOME_DIRECTORY}/../../../version.h.in") 
 
 if(NOT EXISTS ${version_info_in_file}) 
   # try one level up...
-  message(STATUS "[version file generation] Looks like we're doing a remote tipi build")
-  SET(version_info_in_file "${CMAKE_CURRENT_BINARY_DIR}/../../../../version.h.in") 
+  message(STATUS "[sockpp / version file generation] Looks like we're doing a remote tipi build")
+  SET(version_info_in_file "${CMAKE_HOME_DIRECTORY}/../../../../version.h.in") 
 endif()
 
-message(STATUS "[version file generation] Using config in file: ${version_info_in_file}")
+message(STATUS "[sockpp / version file generation] Using config in file: ${version_info_in_file}")
 
 configure_file(
 	"${version_info_in_file}"
@@ -221,7 +221,12 @@ install(
 )
 {{/project_srcs}}
 
-
+# make sure the generated version header gets installed too
+install(
+  DIRECTORY ${generated_dir}/include/sockpp
+  DESTINATION "${include_install_dir}"
+  FILES_MATCHING PATTERN "*.[ih]*"
+)
 
 # Config
 #   * <prefix>/lib/cmake/{{project}}/{{project}}Config.cmake
